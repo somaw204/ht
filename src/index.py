@@ -2,8 +2,8 @@ import asyncio
 import os
 from pathlib import Path
 import random
-from playwright.async_api import async_playwright
 
+from auth import fetch_fingerprint, launch_browser
 from config import CONFIG
 from Utils.log import log
 from Utils import recMail
@@ -12,32 +12,14 @@ from Utils import recMail
 async def start():
     os.system('cls' if os.name == 'nt' else 'clear')
     log("Starting...", "green")
+    await fetch_fingerprint()
 
-    log("Fetching Fingerprint...", "yellow")
-    # TODO: integrate fingerprint service
-    log("Fingerprint fetched and applied", "green")
-
-    proxy = None
-    if CONFIG['USE_PROXY']:
-        log("Applying proxy settings...", "green")
-        proxy = {
-            'server': f"{CONFIG['PROXY_USERNAME']}:{CONFIG['PROXY_PASSWORD']}@{CONFIG['PROXY_IP']}:{CONFIG['PROXY_PORT']}"
-        }
-        log("Proxy settings applied", "green")
-
-    log("Launching browser...", "green")
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, proxy=proxy)
-        page = await browser.new_page()
-        page.set_default_timeout(3600000)
-
-        viewport = await page.evaluate(
-            "() => ({width: document.documentElement.clientWidth, height: document.documentElement.clientHeight})"
-        )
-        log(f"Viewport: [Width: {viewport['width']} Height: {viewport['height']}]", "green")
-
+    playwright, browser, page = await launch_browser()
+    try:
         await create_account(page)
+    finally:
         await browser.close()
+        await playwright.stop()
 
 
 def delay(time: int):
