@@ -178,10 +178,7 @@ async def generate_personal_info():
 
 
 async def generate_password():
-    words = Path(CONFIG['WORDS_FILE']).read_text().splitlines()
-    firstword = random.choice(words).strip()
-    secondword = random.choice(words).strip()
-    return f"{firstword}{secondword}{random.randint(0, 9999)}!"
+    return f"SomawDev{random.randint(1000, 99999)}"
 
 
 SELECTORS = {
