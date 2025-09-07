@@ -46,29 +46,37 @@ def delay(time: int):
 
 async def create_account(page):
     await page.goto("https://outlook.live.com/owa/?nlp=1&signup=1")
-    await page.wait_for_selector(SELECTORS['USERNAME_INPUT'])
+
+    username_input = page.get_by_role("textbox", name="Create a new email address")
+    await username_input.wait_for()
 
     personal_info = await generate_personal_info()
 
-    await page.fill(SELECTORS['USERNAME_INPUT'], personal_info['username'])
-    await page.keyboard.press("Enter")
+    await username_input.fill(personal_info['username'])
+    await username_input.press("Enter")
 
     password = await generate_password()
-    await page.wait_for_selector(SELECTORS['PASSWORD_INPUT'])
-    await page.fill(SELECTORS['PASSWORD_INPUT'], password)
-    await page.keyboard.press("Enter")
+    password_input = page.get_by_role("textbox", name="Create password")
+    await password_input.wait_for()
+    await password_input.fill(password)
+    await password_input.press("Enter")
 
-    await page.wait_for_selector(SELECTORS['FIRST_NAME_INPUT'])
-    await page.fill(SELECTORS['FIRST_NAME_INPUT'], personal_info['randomFirstName'])
-    await page.fill(SELECTORS['LAST_NAME_INPUT'], personal_info['randomLastName'])
-    await page.keyboard.press("Enter")
+    first_name_input = page.get_by_test_id("firstNameInput")
+    last_name_input = page.get_by_test_id("lastNameInput")
+    await first_name_input.wait_for()
+    await first_name_input.fill(personal_info['randomFirstName'])
+    await last_name_input.fill(personal_info['randomLastName'])
+    await last_name_input.press("Enter")
 
-    await page.wait_for_selector(SELECTORS['BIRTH_DAY_INPUT'])
+    birth_day_input = page.get_by_test_id("BirthDay")
+    birth_month_input = page.get_by_test_id("BirthMonth")
+    birth_year_input = page.get_by_test_id("BirthYear")
+    await birth_day_input.wait_for()
     await delay(1000)
-    await page.select_option(SELECTORS['BIRTH_DAY_INPUT'], personal_info['birthDay'])
-    await page.select_option(SELECTORS['BIRTH_MONTH_INPUT'], personal_info['birthMonth'])
-    await page.fill(SELECTORS['BIRTH_YEAR_INPUT'], personal_info['birthYear'])
-    await page.keyboard.press("Enter")
+    await birth_day_input.select_option(personal_info['birthDay'])
+    await birth_month_input.select_option(personal_info['birthMonth'])
+    await birth_year_input.fill(personal_info['birthYear'])
+    await birth_year_input.press("Enter")
 
     email = await page.inner_text(SELECTORS['EMAIL_DISPLAY'])
     await page.wait_for_selector(SELECTORS['FUNCAPTCHA'], timeout=60000)
@@ -170,20 +178,10 @@ async def generate_personal_info():
 
 
 async def generate_password():
-    words = Path(CONFIG['WORDS_FILE']).read_text().splitlines()
-    firstword = random.choice(words).strip()
-    secondword = random.choice(words).strip()
-    return f"{firstword}{secondword}{random.randint(0, 9999)}!"
+    return f"SomawDev{random.randint(1000, 99999)}"
 
 
 SELECTORS = {
-    'USERNAME_INPUT': '#usernameInput',
-    'PASSWORD_INPUT': '#Password',
-    'FIRST_NAME_INPUT': '#firstNameInput',
-    'LAST_NAME_INPUT': '#lastNameInput',
-    'BIRTH_DAY_INPUT': '#BirthDay',
-    'BIRTH_MONTH_INPUT': '#BirthMonth',
-    'BIRTH_YEAR_INPUT': '#BirthYear',
     'EMAIL_DISPLAY': '#userDisplayName',
     'DECLINE_BUTTON': '#declineButton',
     'OUTLOOK_PAGE': '#mainApp',
